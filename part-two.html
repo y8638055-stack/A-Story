@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part Two — Class 10</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Playfair+Display:wght@400;600;700&display=swap');
+
+        :root {
+            /* ROMANTIC THEME: Soft Rose, Warm Gold, Deep Blush */
+            --bg-color: #fff0f3; /* Very pale pink */
+            --text-color: #4a2c2c; /* Warm dark brown */
+            --accent-primary: #d63384; /* Romantic Rose */
+            --accent-warm: #fdcb6e;   /* Sunlight Gold */
+            
+            --glass-bg: rgba(255, 255, 255, 0.5);
+            --glass-border: rgba(255, 255, 255, 0.8);
+            
+            --shadow-light: 8px 8px 16px #e6dadd, -8px -8px 16px #ffffff;
+            --shadow-pressed: inset 4px 4px 8px #e6dadd, inset -4px -4px 8px #ffffff;
+            
+            --aurora-1: rgba(214, 51, 132, 0.15); /* Pink */
+            --aurora-2: rgba(255, 159, 67, 0.15); /* Orange/Gold */
+        }
+
+        body.dark-mode {
+            /* Dark Romantic: Deep Wine, Night Sky */
+            --bg-color: #1f1216;
+            --text-color: #eedddd;
+            --accent-primary: #ff8fa3;
+            --accent-warm: #ffda79;
+            
+            --glass-bg: rgba(50, 20, 30, 0.5);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            
+            --shadow-light: 6px 6px 12px #0f0508, -6px -6px 12px #2e1a20;
+            --shadow-pressed: inset 4px 4px 8px #0f0508, inset -4px -4px 8px #2e1a20;
+            
+            --aurora-1: rgba(214, 51, 132, 0.15);
+            --aurora-2: rgba(255, 107, 107, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.6s ease, color 0.6s ease, border-color 0.6s ease;
+        }
+
+        body {
+            font-family: 'Merriweather', serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 2.0; /* Increased for romantic flow */
+            overflow-x: hidden;
+            font-size: 19px;
+        }
+
+        /* --- BACKGROUND --- */
+        .aurora-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            z-index: -1; overflow: hidden; pointer-events: none;
+        }
+
+        .aurora-blob {
+            position: absolute; border-radius: 50%;
+            filter: blur(80px); opacity: 0.6;
+            animation: pulse 15s infinite alternate;
+        }
+
+        .blob-1 { width: 600px; height: 600px; background: var(--aurora-1); top: -150px; right: -150px; }
+        .blob-2 { width: 500px; height: 500px; background: var(--aurora-2); bottom: -100px; left: -100px; animation-delay: -5s; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.1); opacity: 0.7; }
+        }
+
+        /* --- NAVIGATION --- */
+        nav { position: fixed; top: 25px; right: 25px; z-index: 100; }
+        
+        .theme-toggle {
+            width: 50px; height: 50px; border-radius: 50%; border: none;
+            background: var(--bg-color); box-shadow: var(--shadow-light);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: var(--text-color); font-size: 1.2rem; transition: transform 0.2s ease;
+        }
+        .theme-toggle:active { transform: scale(0.95); box-shadow: var(--shadow-pressed); }
+
+        /* --- LAYOUT --- */
+        .story-container { max-width: 740px; margin: 0 auto; padding: 120px 24px 150px; }
+
+        h1 {
+            font-family: 'Playfair Display', serif; font-size: 3.5rem; font-weight: 700;
+            text-align: center; margin-bottom: 0.5rem; letter-spacing: -0.02em;
+            background: linear-gradient(45deg, var(--text-color), var(--accent-primary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-family: 'Playfair Display', serif; font-size: 1.4rem; text-align: center;
+            font-weight: 400; opacity: 0.7; margin-bottom: 5rem; letter-spacing: 3px;
+            text-transform: uppercase; color: var(--accent-primary);
+        }
+
+        .hook-quote {
+            text-align: center; font-style: italic; opacity: 0.9; margin-bottom: 80px;
+            font-size: 1.3rem; line-height: 1.6; color: var(--text-color);
+            position: relative; padding: 0 20px;
+        }
+        .hook-quote::after {
+            content: '♥'; display: block; margin-top: 15px; font-size: 1rem; color: var(--accent-primary); opacity: 0.5;
+        }
+
+        p {
+            margin-bottom: 2.2rem; opacity: 0; transform: translateY(30px);
+            transition: opacity 0.9s ease-out, transform 0.9s ease-out;
+        }
+        p.visible { opacity: 1; transform: translateY(0); }
+
+        /* --- ROMANTIC UI ELEMENTS --- */
+
+        /* 1. Heartbeat Separator */
+        .separator-heart {
+            text-align: center; margin: 80px 0; font-size: 1.5rem; color: var(--accent-primary); opacity: 0.3;
+        }
+
+        /* 2. Glass Moment (Warmer) */
+        .glass-moment {
+            background: var(--glass-bg);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            border: 1px solid var(--glass-border);
+            padding: 45px; border-radius: 20px; margin: 60px 0;
+            box-shadow: 0 10px 40px rgba(214, 51, 132, 0.05);
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        /* 3. Golden Hour Section */
+        .sunlight-section {
+            background: linear-gradient(135deg, rgba(253, 203, 110, 0.05), rgba(255, 159, 67, 0.05));
+            border-radius: 12px; padding: 40px 25px; margin: 50px -25px;
+            border: 1px dashed rgba(253, 203, 110, 0.3);
+        }
+
+        /* 4. Epiphany (Quiet Truth) */
+        .quiet-truth {
+            text-align: center; margin: 100px 0; position: relative;
+        }
+        .quiet-truth::before {
+            content: ''; position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+            width: 1px; height: 100px; background: linear-gradient(to bottom, transparent, var(--accent-primary));
+            z-index: -1; opacity: 0.3;
+        }
+        .quiet-truth span {
+            display: block; font-family: 'Playfair Display', serif;
+            font-size: 1.8rem; font-weight: 700; color: var(--accent-primary); margin-top: 15px;
+        }
+
+        /* --- FOOTER WITH HREF --- */
+        .footer-nav { margin-top: 120px; padding-top: 40px; border-top: 1px solid rgba(0,0,0,0.05); }
+
+        .next-chapter-btn {
+            display: block; /* Acts like a block element */
+            text-decoration: none; /* Removes underline */
+            background: var(--bg-color); 
+            box-shadow: var(--shadow-light);
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 24px; padding: 35px; width: 100%;
+            text-align: left; cursor: pointer; transition: all 0.3s ease;
+            color: var(--text-color); position: relative; overflow: hidden;
+        }
+
+        .next-chapter-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(214, 51, 132, 0.1); }
+        
+        .next-chapter-btn:active { transform: scale(0.98); box-shadow: var(--shadow-pressed); }
+
+        .next-label {
+            display: block; font-size: 0.75rem; opacity: 0.6; 
+            text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;
+        }
+        .next-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 600; }
+        
+    </style>
+</head>
+<body>
+
+    <div class="aurora-container">
+        <div class="aurora-blob blob-1"></div>
+        <div class="aurora-blob blob-2"></div>
+    </div>
+
+    <nav>
+        <button class="theme-toggle" id="theme-btn">☾</button>
+    </nav>
+
+    <main class="story-container">
+        
+        <header>
+            <h1>PART TWO</h1>
+            <div class="subtitle">CLASS 10</div>
+            <div class="hook-quote">
+                Class 10 did not begin with excitement.<br>
+                It began with weight.
+            </div>
+        </header>
+
+        <p>The same classroom looked different now — not because anything had changed, but because everyone inside it had. Teachers spoke more seriously. Notebooks filled faster. Parents asked questions that didn’t have easy answers. Somewhere between all of that, childhood quietly stepped back.</p>
+        
+        <p>He still sat near the window.</p>
+        
+        <p>The seat hadn’t changed, and neither had the habit. From there, the classroom felt familiar, almost comforting. Like a place he had learned how to survive in. The girl still sat in the middle rows. Close enough to notice. Far enough to remain untouched.</p>
+        
+        <p>Nothing dramatic happened at the start of the year.</p>
+        <p>And yet, everything felt closer.</p>
+
+        <p>The first few weeks of Class 10 passed in silence — not awkward silence, but the kind that exists when people are busy becoming something. He watched her the same way he always had. From a distance. Without expectations.</p>
+
+        <p>She seemed more focused now. Less laughter during lectures. More seriousness in her eyes. But she was still the same in ways that mattered. She still listened carefully. She still smiled at small things. She still felt familiar in a classroom that was beginning to feel temporary.</p>
+
+        <p>He liked that she hadn’t changed.<br>At least, not yet.</p>
+
+        <div class="separator-heart">~</div>
+
+        <p>They still didn’t talk much.</p>
+        <p>A few words here and there. A doubt before a test. A notebook exchanged during class. Their conversations stayed brief, almost forgettable to anyone else. But to him, they carried weight.</p>
+        
+        <p>Because now, he noticed something new.</p>
+        <p>Comfort.</p>
+        
+        <p>Talking to her didn’t feel forced. There was no rush to impress, no pressure to say the right thing. Words came and went easily, like they didn’t need permission.</p>
+        
+        <p>That scared him a little.</p>
+
+        <div class="glass-moment">
+            <p>The incident that changed things didn’t feel important when it happened.</p>
+            <p>It was just another day. A surprise test. Panic everywhere. Whispers moving faster than pens. The classroom buzzing with tension. He sat flipping through his notebook, trying to remember things that refused to stay still.</p>
+            <p>She turned back slightly from her seat.</p>
+            <p>Not fully. Just enough.</p>
+            <p>She asked something quietly. A small doubt. Something simple.</p>
+            <p>He answered without thinking much about it.</p>
+            <p>She nodded. Smiled. Turned back.</p>
+        </div>
+
+        <p>That should have been the end of it.</p>
+        <p>But after that day, she started turning back more often.</p>
+        <p>Sometimes for doubts. Sometimes for nothing important at all.</p>
+        <p>And he started answering without hesitation.</p>
+
+        <div style="border-left: 1px solid var(--accent-primary); padding-left: 20px; margin: 40px 0;">
+            <p>Slowly, distance began to shrink.</p>
+            <p>Not physically — he still sat where he always did. But something invisible had moved. Conversations started lasting a little longer. A question turned into a comment. A comment turned into a quiet laugh.</p>
+        </div>
+
+        <p>Still, nothing crossed a line. They didn’t sit together. They didn’t walk together. They didn’t talk outside class. Everything happened within the boundaries of the classroom.</p>
+        
+        <p>And somehow, that made it feel safe.</p>
+
+        <div class="sunlight-section">
+            <p>Class 10 had its own rhythm.</p>
+            <p>Long lectures. Short breaks. Shared frustration before exams. Late afternoon sunlight falling on desks, making even the most boring subjects feel tolerable. In between all of that, small moments lived.</p>
+            <p>A glance during a boring lecture. A smile after a test went better than expected. A quiet “all the best” before an exam.</p>
+        </div>
+
+        <p>He didn’t collect these moments deliberately. They just stayed.</p>
+        
+        <p>Sometimes, he caught her looking back at him. Not for doubts. Not for help. Just briefly. He never knew why. He never assumed anything. Assumptions felt dangerous.</p>
+        
+        <p>So he looked away, pretending he hadn’t noticed.</p>
+
+        <div class="separator-heart">~</div>
+
+        <p>As board exams came closer, pressure wrapped itself around everyone. Teachers rushed syllabi. Friends studied together. Conversations became shorter, more practical.</p>
+        
+        <p>And yet, with her, things remained soft.</p>
+        
+        <p>They spoke about exams. About how fast the year was moving. About how strange it felt that school would end soon. These conversations never went deep, but they didn’t need to.</p>
+        
+        <p>There was comfort in the surface.</p>
+
+        <p>He thought about telling her something. Not love. Not feelings. Just that he liked talking to her. That her presence made school feel lighter. But timing never felt right. There was always a test coming up. Always a chapter left. Always something more important.</p>
+        
+        <p>So he waited.</p>
+        <p>Waiting had become familiar.</p>
+
+        <p>One evening, after school, he stayed back longer than usual. The classroom was almost empty. He was packing his bag when she walked back in to collect something she had forgotten.</p>
+        
+        <p>They were alone for a moment.</p>
+        <p style="text-align: center; font-style: italic; color: var(--accent-primary);">Not awkward. Not tense. Just quiet.</p>
+        
+        <p>They spoke briefly. About the test. About how tired everyone was. About how fast time was passing. Nothing important was said.</p>
+        
+        <p>And yet, that moment stayed with him longer than it should have.</p>
+
+        <div class="quiet-truth">
+            By the middle of Class 10, something was clear to him.
+            <span>He liked her.</span>
+            Not as a thought. Not as a possibility.
+            <span>But as a quiet truth.</span>
+        </div>
+
+        <p>He still didn’t know what she thought. He didn’t try to guess. He didn’t try to read signs. He only knew what he felt — and that was enough to keep him careful.</p>
+        
+        <p>Class 10 was gentle like that. No drama. No heartbreak. Just two people growing familiar in a space that wouldn’t last forever.</p>
+        
+        <p>He believed, quietly, that after boards, after exams, after all of this ended — maybe he would say something.</p>
+        
+        <p>Time felt distant enough to make hope easy.</p>
+        
+        <p>For now, everything stayed soft.</p>
+        <p>She was still the girl from the classroom. Unchanged. Familiar.</p>
+        
+        <p>And he was still watching from a distance —</p>
+        
+        <p style="text-align: right; font-weight: 700; color: var(--accent-primary); margin-top: 40px;">just not as far away as before.</p>
+
+        <div style="text-align: center; margin-top: 60px; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase;">
+            End of Part Two
+        </div>
+
+        <div class="footer-nav">
+            <a href="part-three.html" class="next-chapter-btn">
+                <span class="next-label">next</span>
+                <span class="next-title">Part Three: The Farewell →</span>
+            </a>
+        </div>
+
+    </main>
+
+    <script>
+        const toggleBtn = document.getElementById('theme-btn');
+        const body = document.body;
+        toggleBtn.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            toggleBtn.textContent = body.classList.contains('dark-mode') ? '☀' : '☾';
+        });
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('p, .glass-moment, .sunlight-section, .quiet-truth').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
